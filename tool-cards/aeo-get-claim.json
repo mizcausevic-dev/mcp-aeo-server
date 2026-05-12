@@ -1,0 +1,34 @@
+{
+  "tool_card_version": "0.1",
+  "tool": {
+    "server_id": "mcp-aeo-server",
+    "name": "aeo_get_claim",
+    "version": "0.1.0",
+    "mcp_server_uri": "stdio:mcp-aeo-server",
+    "description": "Extract a single claim by ID from an origin's AEO declaration."
+  },
+  "schema": {
+    "input_schema_inline": {
+      "type": "object",
+      "required": ["origin", "claim_id"],
+      "additionalProperties": false,
+      "properties": {
+        "origin": { "type": "string", "format": "uri" },
+        "claim_id": { "type": "string" }
+      }
+    }
+  },
+  "safety": {
+    "side_effect_class": "read",
+    "external_systems": ["target origin's web server"],
+    "reversible": true,
+    "rate_limited": false,
+    "pii_exposure": "low",
+    "secrets_exposure": "none",
+    "human_approval_required": false,
+    "refusal_modes": ["target_unreachable", "claim_not_found"]
+  },
+  "audit": {
+    "incident_response_uri": "https://github.com/mizcausevic-dev/mcp-aeo-server/issues"
+  }
+}

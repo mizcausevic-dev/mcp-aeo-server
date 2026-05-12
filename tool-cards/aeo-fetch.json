@@ -1,0 +1,33 @@
+{
+  "tool_card_version": "0.1",
+  "tool": {
+    "server_id": "mcp-aeo-server",
+    "name": "aeo_fetch",
+    "version": "0.1.0",
+    "mcp_server_uri": "stdio:mcp-aeo-server",
+    "description": "Fetch the full AEO Protocol declaration document at an origin's well-known URL (/.well-known/aeo.json)."
+  },
+  "schema": {
+    "input_schema_inline": {
+      "type": "object",
+      "required": ["origin"],
+      "additionalProperties": false,
+      "properties": {
+        "origin": { "type": "string", "format": "uri" }
+      }
+    }
+  },
+  "safety": {
+    "side_effect_class": "read",
+    "external_systems": ["target origin's web server"],
+    "reversible": true,
+    "rate_limited": false,
+    "pii_exposure": "low",
+    "secrets_exposure": "none",
+    "human_approval_required": false,
+    "refusal_modes": ["target_unreachable", "malformed_aeo_document"]
+  },
+  "audit": {
+    "incident_response_uri": "https://github.com/mizcausevic-dev/mcp-aeo-server/issues"
+  }
+}

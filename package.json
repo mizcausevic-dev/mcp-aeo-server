@@ -1,0 +1,38 @@
+{
+  "name": "@mizcausevic-dev/mcp-aeo-server",
+  "version": "0.1.0",
+  "description": "MCP server that exposes AEO Protocol declarations as tools. Any MCP-compatible agent (Claude Desktop, Cursor, etc.) can fetch, inspect, and query AEO declarations served at /.well-known/aeo.json.",
+  "type": "module",
+  "bin": {
+    "mcp-aeo-server": "./dist/server.js"
+  },
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "files": ["dist", "tool-cards", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/server.js"
+  },
+  "keywords": ["mcp", "model-context-protocol", "aeo", "agent", "claude", "well-known"],
+  "author": "Miz Causevic",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mizcausevic-dev/mcp-aeo-server.git"
+  },
+  "homepage": "https://github.com/mizcausevic-dev/mcp-aeo-server",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
+  }
+}
