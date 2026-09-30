@@ -1,5 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createServer, type Server as HttpServer } from "node:http";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   handleAeoFetch,
@@ -7,48 +6,33 @@ import {
   handleAeoInspect,
   handleAeoWellKnownUrl,
 } from "../src/server.js";
+import { isPublicAddress, wellKnownUrl } from "../src/document.js";
 
-let server: HttpServer;
-let originUrl: string;
+const originUrl = "https://example.com";
 
-const exampleDoc = {
-  aeo_version: "0.1",
-  entity: {
-    id: "https://example.com/#org",
-    type: "Organization",
-    name: "Example Org",
-    canonical_url: "https://example.com/",
-  },
-  authority: {
-    primary_sources: ["https://example.com/"],
-    verifications: [{ type: "domain", value: "example.com" }],
-  },
-  claims: [
-    { id: "tagline", predicate: "description", value: "test", confidence: "high" },
-    { id: "year-founded", predicate: "foundingDate", value: 2026, confidence: "high" },
-  ],
-  audit: { mode: "none" },
-};
-
-beforeAll(async () => {
-  server = createServer((req, res) => {
-    if (req.url === "/.well-known/aeo.json") {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(exampleDoc));
-    } else {
-      res.writeHead(404);
-      res.end("not found");
-    }
-  });
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  const addr = server.address();
-  if (typeof addr === "object" && addr !== null) {
-    originUrl = `http://127.0.0.1:${addr.port}`;
-  }
-});
-
-afterAll(async () => {
-  await new Promise<void>((resolve) => server.close(() => resolve()));
+vi.mock("../src/document.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../src/document.js")>();
+  return {
+    ...actual,
+    fetchWellKnown: vi.fn(async () => actual.parseDocument(JSON.stringify({
+      aeo_version: "0.1",
+      entity: {
+        id: "https://example.com/#org",
+        type: "Organization",
+        name: "Example Org",
+        canonical_url: "https://example.com/",
+      },
+      authority: {
+        primary_sources: ["https://example.com/"],
+        verifications: [{ type: "domain", value: "example.com" }],
+      },
+      claims: [
+        { id: "tagline", predicate: "description", value: "test", confidence: "high" },
+        { id: "year-founded", predicate: "foundingDate", value: 2026, confidence: "high" },
+      ],
+      audit: { mode: "none" },
+    }))),
+  };
 });
 
 describe("aeo_fetch", () => {
@@ -104,5 +88,34 @@ describe("aeo_well_known_url", () => {
     expect(JSON.parse(out).url).toBe(
       "https://example.com/.well-known/aeo.json",
     );
+  });
+
+  it("rejects non-HTTPS, credentials, paths, and IP literals", () => {
+    for (const origin of [
+      "http://example.com",
+      "https://user:pass@example.com",
+      "https://example.com/other",
+      "https://127.0.0.1",
+      "https://[::1]",
+      "https://example.com/?target=localhost",
+    ]) {
+      expect(() => wellKnownUrl(origin)).toThrow();
+    }
+  });
+});
+
+describe("network address gate", () => {
+  it("denies loopback, private, link-local, mapped, and documentation addresses", () => {
+    expect(isPublicAddress("127.0.0.1", 4)).toBe(false);
+    expect(isPublicAddress("10.1.2.3", 4)).toBe(false);
+    expect(isPublicAddress("169.254.169.254", 4)).toBe(false);
+    expect(isPublicAddress("192.168.1.1", 4)).toBe(false);
+    expect(isPublicAddress("::ffff:127.0.0.1", 6)).toBe(false);
+    expect(isPublicAddress("2001:db8::1", 6)).toBe(false);
+  });
+
+  it("allows public IPv4 and global IPv6 addresses", () => {
+    expect(isPublicAddress("8.8.8.8", 4)).toBe(true);
+    expect(isPublicAddress("2606:4700:4700::1111", 6)).toBe(true);
   });
 });

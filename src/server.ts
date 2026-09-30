@@ -16,6 +16,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 import {
   type AeoDocument,
@@ -113,7 +115,7 @@ export function buildServer(): Server {
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
-    const handler = handlers[name];
+    const handler = Object.hasOwn(handlers, name) ? handlers[name] : undefined;
     if (!handler) {
       return {
         content: [{ type: "text", text: `unknown tool: ${name}` }],
@@ -144,7 +146,7 @@ async function main(): Promise<void> {
   process.stderr.write("mcp-aeo-server: listening on stdio\n");
 }
 
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, "/")}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   main().catch((err) => {
     process.stderr.write(`mcp-aeo-server: fatal: ${err}\n`);
     process.exit(1);

@@ -1,6 +1,6 @@
 # mcp-aeo-server
 
-An **MCP server** that exposes [AEO Protocol](https://github.com/mizcausevic-dev/aeo-protocol-spec) declarations as tools any MCP-compatible AI agent can call — Claude Desktop, Cursor, [Codex CLI](https://github.com/anthropics/claude-cli), or any custom client.
+An **MCP server** that exposes [AEO Protocol](https://github.com/mizcausevic-dev/aeo-protocol-spec) declarations as tools for MCP clients such as Claude Desktop, Cursor, and [Codex CLI](https://github.com/openai/codex).
 
 Drop the server config into your MCP client and the agent gains four tools:
 
@@ -11,19 +11,19 @@ Drop the server config into your MCP client and the agent gains four tools:
 | `aeo_get_claim` | Extract a single claim by ID; surfaces available IDs when the requested one is missing |
 | `aeo_well_known_url` | Compute the canonical well-known URL without fetching |
 
-Each tool ships with a conforming [MCP Tool Card](https://github.com/mizcausevic-dev/mcp-tool-card-spec) document in [`tool-cards/`](tool-cards/).
+Each tool has a bundled [MCP Tool Card](https://github.com/mizcausevic-dev/mcp-tool-card-spec) JSON document in [`tool-cards/`](tool-cards/) describing its inputs and safety properties. These cards are not served at the protocol's HTTPS well-known discovery path, so full Tool Card conformance is not claimed.
 
-## Install
-
-```bash
-npm install -g @mizcausevic-dev/mcp-aeo-server
-```
-
-Or run without installing via `npx`:
+## Run from source
 
 ```bash
-npx @mizcausevic-dev/mcp-aeo-server
+git clone https://github.com/mizcausevic-dev/mcp-aeo-server.git
+cd mcp-aeo-server
+npm ci
+npm run build
+node dist/server.js
 ```
+
+The package is not yet available from the public npm registry. The `npx` and global-install commands will work only after a package release is verified there.
 
 ## Claude Desktop config
 
@@ -33,14 +33,14 @@ Add to your `claude_desktop_config.json` (macOS: `~/Library/Application Support/
 {
   "mcpServers": {
     "aeo": {
-      "command": "npx",
-      "args": ["-y", "@mizcausevic-dev/mcp-aeo-server"]
+      "command": "node",
+      "args": ["/absolute/path/to/mcp-aeo-server/dist/server.js"]
     }
   }
 }
 ```
 
-Restart Claude Desktop. The four `aeo_*` tools will appear in Claude's tools panel and the model can invoke them directly. Try:
+Replace the example path with the absolute path to your built checkout (for example, `C:/Users/you/mcp-aeo-server/dist/server.js` on Windows), then restart Claude Desktop. Try:
 
 > *"Use the aeo_inspect tool to show me what mizcausevic-dev.github.io declares about itself."*
 
@@ -48,9 +48,11 @@ Claude will call `aeo_inspect({ origin: "https://mizcausevic-dev.github.io" })` 
 
 ## Cursor / Continue / other MCP clients
 
-Any client that speaks MCP over stdio works. Point its server config at `npx @mizcausevic-dev/mcp-aeo-server` with no arguments.
+Point a client's stdio server config at `node` with the absolute `dist/server.js` path as its argument.
 
 ## Tools
+
+All origin inputs must be public HTTPS hostnames without a path, query, or fragment. The fetch tools reject direct IP addresses and DNS answers in private or reserved ranges; they make outbound requests to the named origin.
 
 ### `aeo_fetch`
 ```json
@@ -94,14 +96,14 @@ Returns `{ "url": "https://example.com/.well-known/aeo.json" }`.
 
 ## How this fits the Kinetic Gain Protocol Suite
 
-- The **server itself** uses AEO Protocol semantics (Tool Cards published in [`tool-cards/`](tool-cards/), conforming to [mcp-tool-card-spec](https://github.com/mizcausevic-dev/mcp-tool-card-spec))
+- The **server** bundles Tool Card metadata in [`tool-cards/`](tool-cards/) for each exposed tool; HTTPS discovery remains future work.
 - The **tools** read AEO Protocol documents conforming to [aeo-protocol-spec](https://github.com/mizcausevic-dev/aeo-protocol-spec)
 - Together they close a loop: an AEO declaration somewhere on the web → an MCP server that lets any AI agent reason about it
 
 ## Conformance
 
 - **AEO Protocol** support: Level 1 (Declare). Signature verification (L2) and audit submission (L3) are deferred to v0.2.
-- **MCP Tool Cards** support: Level 2 (Safety) for every tool, conforming to the v0.1 spec.
+- **MCP Tool Cards**: Four bundled cards with safety fields. The protocol's HTTPS discovery requirement is not implemented.
 
 ## Development
 
@@ -112,13 +114,13 @@ npm test
 npm run build
 ```
 
-Tests use a small in-process HTTP server (Node `node:http`) to serve a fixture AEO document. No external network required.
+Tests use a local fixture for tool handlers and check that unsafe origin and address inputs are rejected. No external network required.
 
 ## Compatibility
 
-- Node `18+`
+- Node `20+`
 - `@modelcontextprotocol/sdk` `^1.0`
-- Tested with Claude Desktop and any MCP client speaking stdio
+- Uses MCP over stdio; client-specific configuration remains to be verified in each client
 
 ## License
 
