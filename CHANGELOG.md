@@ -5,9 +5,10 @@ All notable changes to this project are documented here.
 ## [0.1.0] - Unreleased
 
 ### Release review fixes
+- Add Tool Card web-root export and opt-in MCP discovery metadata; public HTTPS serving still requires operator deployment and verification.
 - Restrict network discovery to public HTTPS origins, pin vetted DNS answers, allow one same-origin redirect, and bound response size and time.
 - Start the stdio server correctly from `node dist/server.js` on Windows.
-- Add the fourth bundled Tool Card and clarify that HTTPS Tool Card discovery is not implemented.
+- Add the fourth bundled Tool Card and clarify that the stdio server does not itself host HTTPS discovery.
 - Refresh vulnerable production transitive dependencies in the lockfile.
 - Require Node 20+ because the updated production dependency tree does not support Node 18.
 

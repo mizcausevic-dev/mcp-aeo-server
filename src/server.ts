@@ -6,6 +6,7 @@
  *   - aeo_fetch     : fetch an origin's /.well-known/aeo.json
  *   - aeo_inspect   : return a structured summary of an AEO document
  *   - aeo_get_claim : extract a specific claim by ID
+ *   - aeo_well_known_url : compute a URL without fetching
  *
  * Designed to drop into Claude Desktop / Cursor / any MCP-compatible
  * client via stdio transport.
@@ -26,7 +27,7 @@ import {
   findClaim,
   wellKnownUrl,
 } from "./document.js";
-import { toolDescriptors } from "./tools.js";
+import { toolsWithCardUris } from "./tools.js";
 
 function summarize(doc: AeoDocument): {
   protocol: string;
@@ -96,7 +97,8 @@ const handlers: Record<string, (args: any) => Promise<string>> = {
   aeo_well_known_url: handleAeoWellKnownUrl,
 };
 
-export function buildServer(): Server {
+export function buildServer(options: { toolCardOrigin?: string } = {}): Server {
+  const tools = toolsWithCardUris(options.toolCardOrigin);
   const server = new Server(
     {
       name: "mcp-aeo-server",
@@ -110,7 +112,7 @@ export function buildServer(): Server {
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: toolDescriptors,
+    tools,
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -140,7 +142,7 @@ export function buildServer(): Server {
 }
 
 async function main(): Promise<void> {
-  const server = buildServer();
+  const server = buildServer({ toolCardOrigin: process.env.MCP_AEO_TOOL_CARD_ORIGIN });
   const transport = new StdioServerTransport();
   await server.connect(transport);
   process.stderr.write("mcp-aeo-server: listening on stdio\n");

@@ -11,7 +11,7 @@ The server provides four tools to a compatible stdio MCP client:
 | `aeo_get_claim` | Extract a single claim by ID; surfaces available IDs when the requested one is missing |
 | `aeo_well_known_url` | Compute the canonical well-known URL without fetching |
 
-Each tool has a bundled [MCP Tool Card](https://github.com/mizcausevic-dev/mcp-tool-card-spec) JSON document in [`tool-cards/`](tool-cards/) describing its inputs and safety properties. These cards are not served at the protocol's HTTPS well-known discovery path, so full Tool Card conformance is not claimed.
+Each tool has a bundled [MCP Tool Card](https://github.com/mizcausevic-dev/mcp-tool-card-spec) JSON document in [`tool-cards/`](tool-cards/) describing its inputs and safety properties. An operator can export these cards to a web root for HTTPS discovery. This repository does not host that web root, so live Tool Card conformance is not claimed.
 
 ## Run from source
 
@@ -24,6 +24,16 @@ node dist/server.js
 ```
 
 The package is not yet available from the public npm registry. The `npx` and global-install commands will work only after a package release is verified there.
+
+## Tool Card HTTPS discovery
+
+The stdio server does not expose an HTTP endpoint. After building, export the four bundled cards into a fresh staging web root for a separate HTTPS host:
+
+```bash
+npm run tool-cards:export -- /absolute/path/to/staging-web-root
+```
+
+This writes `.well-known/mcp-tools/aeo_fetch.json`, `aeo_inspect.json`, `aeo_get_claim.json`, and `aeo_well_known_url.json` beneath that root. Export fails if the `mcp-tools` directory already exists, so use a fresh staging directory for each run. Replace the hosted `mcp-tools` directory with the verified four-file set, then check each public `https://<your-host>/.well-known/mcp-tools/<tool-name>.json` URL returns the matching card with JSON content type. Only then set `MCP_AEO_TOOL_CARD_ORIGIN` to that HTTPS origin in the MCP client environment (for example `https://cards.example.com`). The server includes each canonical URL in `tools/list` as `x-tool-card-uri` and `_meta["x-tool-card-uri"]`. With the variable unset it advertises no Tool Card URI; invalid or non-HTTPS values stop startup. The export and MCP listing checks run locally, but live HTTPS hosting remains an operator release step.
 
 ## Claude Desktop config
 
@@ -96,14 +106,14 @@ Returns `{ "url": "https://example.com/.well-known/aeo.json" }`.
 
 ## How this fits the Kinetic Gain Protocol Suite
 
-- The **server** bundles Tool Card metadata in [`tool-cards/`](tool-cards/) for each exposed tool; HTTPS discovery remains future work.
+- The **server** bundles Tool Card metadata in [`tool-cards/`](tool-cards/) for each exposed tool and can export canonical HTTPS discovery files; an operator must host and verify them.
 - The **tools** read AEO Protocol documents conforming to [aeo-protocol-spec](https://github.com/mizcausevic-dev/aeo-protocol-spec)
 - Together they close a loop: an AEO declaration somewhere on the web → an MCP server that lets any AI agent reason about it
 
 ## Conformance
 
 - **AEO Protocol** support: Level 1 (Declare). Signature verification (L2) and audit submission (L3) are deferred to v0.2.
-- **MCP Tool Cards**: Four bundled cards with safety fields. The protocol's HTTPS discovery requirement is not implemented.
+- **MCP Tool Cards**: Four bundled cards with safety fields, an export path, and opt-in MCP discovery metadata. Public HTTPS serving and conformance are unverified until an operator publishes the files.
 
 ## Development
 
