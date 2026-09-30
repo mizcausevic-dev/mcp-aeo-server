@@ -6,6 +6,7 @@
  *   - aeo_fetch     : fetch an origin's /.well-known/aeo.json
  *   - aeo_inspect   : return a structured summary of an AEO document
  *   - aeo_get_claim : extract a specific claim by ID
+ *   - aeo_well_known_url : compute a URL without fetching
  *
  * Designed to drop into Claude Desktop / Cursor / any MCP-compatible
  * client via stdio transport.
@@ -16,6 +17,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 import {
   type AeoDocument,
@@ -24,7 +27,7 @@ import {
   findClaim,
   wellKnownUrl,
 } from "./document.js";
-import { toolDescriptors } from "./tools.js";
+import { toolsWithCardUris } from "./tools.js";
 
 function summarize(doc: AeoDocument): {
   protocol: string;
@@ -94,7 +97,8 @@ const handlers: Record<string, (args: any) => Promise<string>> = {
   aeo_well_known_url: handleAeoWellKnownUrl,
 };
 
-export function buildServer(): Server {
+export function buildServer(options: { toolCardOrigin?: string } = {}): Server {
+  const tools = toolsWithCardUris(options.toolCardOrigin);
   const server = new Server(
     {
       name: "mcp-aeo-server",
@@ -108,12 +112,12 @@ export function buildServer(): Server {
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: toolDescriptors,
+    tools,
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
-    const handler = handlers[name];
+    const handler = Object.hasOwn(handlers, name) ? handlers[name] : undefined;
     if (!handler) {
       return {
         content: [{ type: "text", text: `unknown tool: ${name}` }],
@@ -138,13 +142,13 @@ export function buildServer(): Server {
 }
 
 async function main(): Promise<void> {
-  const server = buildServer();
+  const server = buildServer({ toolCardOrigin: process.env.MCP_AEO_TOOL_CARD_ORIGIN });
   const transport = new StdioServerTransport();
   await server.connect(transport);
   process.stderr.write("mcp-aeo-server: listening on stdio\n");
 }
 
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, "/")}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   main().catch((err) => {
     process.stderr.write(`mcp-aeo-server: fatal: ${err}\n`);
     process.exit(1);

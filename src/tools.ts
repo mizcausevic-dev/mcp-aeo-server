@@ -2,9 +2,11 @@
  * MCP tool descriptors. Each tool has an input JSON Schema that the
  * MCP client (Claude / Cursor / etc.) consumes for argument validation.
  *
- * For each tool, a conforming MCP Tool Card document lives in
- * tool-cards/ at the repo root and is served alongside the package.
+ * For each tool, a bundled MCP Tool Card document lives in tool-cards/.
+ * Operators can export the cards to a separate HTTPS web root.
  */
+import { isIP } from "node:net";
+
 export const toolDescriptors = [
   {
     name: "aeo_fetch",
@@ -80,3 +82,32 @@ export const toolDescriptors = [
     },
   },
 ];
+
+export function toolsWithCardUris(origin?: string) {
+  if (origin === undefined) return toolDescriptors;
+
+  let url: URL;
+  try {
+    url = new URL(origin);
+  } catch {
+    throw new TypeError("Tool Card origin must be an absolute HTTPS origin URL");
+  }
+  if (
+    url.protocol !== "https:" || url.username || url.password ||
+    !/^\/*$/.test(url.pathname) || url.search || url.hash ||
+    isIP(url.hostname.replace(/^\[|\]$/g, "")) !== 0
+  ) {
+    throw new TypeError("Tool Card origin must be an HTTPS hostname without credentials, path, query, or fragment");
+  }
+
+  return toolDescriptors.map((tool) => {
+    const uri = `${url.origin}/.well-known/mcp-tools/${tool.name}.json`;
+    return {
+      ...tool,
+      // The Tool Card draft proposes this extension. MCP clients that strip
+      // unknown tool properties can still read the standard _meta field.
+      "x-tool-card-uri": uri,
+      _meta: { "x-tool-card-uri": uri },
+    };
+  });
+}

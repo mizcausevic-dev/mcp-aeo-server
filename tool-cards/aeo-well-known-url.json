@@ -2,31 +2,30 @@
   "tool_card_version": "0.1",
   "tool": {
     "server_id": "mcp-aeo-server",
-    "name": "aeo_get_claim",
+    "name": "aeo_well_known_url",
     "version": "0.1.0",
     "mcp_server_uri": "stdio:mcp-aeo-server",
-    "description": "Extract a single claim by ID from an origin's AEO declaration."
+    "description": "Compute the canonical well-known AEO URL for an HTTPS origin without fetching it."
   },
   "schema": {
     "input_schema_inline": {
       "type": "object",
-      "required": ["origin", "claim_id"],
+      "required": ["origin"],
       "additionalProperties": false,
       "properties": {
-        "origin": { "type": "string", "format": "uri" },
-        "claim_id": { "type": "string" }
+        "origin": { "type": "string", "format": "uri" }
       }
     }
   },
   "safety": {
     "side_effect_class": "read",
-    "external_systems": ["target origin's web server"],
+    "external_systems": [],
     "reversible": true,
     "rate_limited": false,
-    "pii_exposure": "medium",
+    "pii_exposure": "none",
     "secrets_exposure": "none",
     "human_approval_required": false,
-    "refusal_modes": ["target_unreachable", "claim_not_found"]
+    "refusal_modes": ["invalid_origin"]
   },
   "audit": {
     "incident_response_uri": "https://github.com/mizcausevic-dev/mcp-aeo-server/issues"

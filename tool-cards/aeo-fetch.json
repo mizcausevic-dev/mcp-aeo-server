@@ -22,7 +22,7 @@
     "external_systems": ["target origin's web server"],
     "reversible": true,
     "rate_limited": false,
-    "pii_exposure": "low",
+    "pii_exposure": "medium",
     "secrets_exposure": "none",
     "human_approval_required": false,
     "refusal_modes": ["target_unreachable", "malformed_aeo_document"]

@@ -2,23 +2,25 @@
 
 All notable changes to this project are documented here.
 
-## [1.0.0] - 2026-05-12
+## [0.1.0] - Unreleased
 
-### Released
-- Shipped **mcp-aeo-server** as a public artifact for teams dealing with mcp governance.
-- Packaged the current implementation, documentation, validation flow, and proof surfaces into a repo that can be reviewed by technical and operating stakeholders.
-- Clarified the core problem the project is addressing: tool-surface drift, weak schema review, and fragile governance around agent-connected systems.
+### Release review fixes
+- Add Tool Card web-root export and opt-in MCP discovery metadata; public HTTPS serving still requires operator deployment and verification.
+- Restrict network discovery to public HTTPS origins, pin vetted DNS answers, allow one same-origin redirect, and bound response size and time.
+- Start the stdio server correctly from `node dist/server.js` on Windows.
+- Add the fourth bundled Tool Card and clarify that the stdio server does not itself host HTTPS discovery.
+- Refresh vulnerable production transitive dependencies in the lockfile.
+- Require Node 20+ because the updated production dependency tree does not support Node 18.
 
-### Why this mattered
-- Existing approaches in traditional AppSec tools, cloud posture products, and generic observability stacks were useful for parts of the workflow.
-- They still left out an operator-visible layer that could explain tool exposure, control posture, and prompt-driven risk in one place.
-- This release made the repo read like an operational capability rather than a narrow technical demo.
+## Documentation refresh - 2026-05-12
 
-## [0.1.0] - 2026-03-11
+- Updated repository positioning and documentation. No 1.0.0 package release occurred.
+
+## Internal source milestone - 2026-03-11
 
 ### Shipped
 - Cut the first coherent internal version of **mcp-aeo-server** with stable domain objects, review surfaces, and decision outputs.
-- Established the first reviewable version of the architecture described as: MCP server exposing AEO Protocol declarations as four tools (fetch, inspect, get_claim, well_known_url). Drop-in for Claude Desktop, Cursor, or any MCP-compatible agent. Ships with conforming MCP Tool Cards for every tool. Part of the Kinetic Gain Protocol Suite.
+- Established the first reviewable source version exposing AEO declarations as four tools (fetch, inspect, get_claim, well_known_url).
 - Focused the repo around actionability instead of passive reporting.
 
 ## [Prototype] - 2025-08-18
