@@ -2,7 +2,7 @@
 
 An **MCP server** that exposes [AEO Protocol](https://github.com/mizcausevic-dev/aeo-protocol-spec) declarations as tools for MCP clients such as Claude Desktop, Cursor, and [Codex CLI](https://github.com/openai/codex).
 
-Drop the server config into your MCP client and the agent gains four tools:
+The server provides four tools to a compatible stdio MCP client:
 
 | Tool | What it does |
 |---|---|
