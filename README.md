@@ -1,6 +1,6 @@
 # mcp-aeo-server
 
-> **Install path checked 2026-10-30:** The scoped standalone npm package is not published. The public [mcp-kinetic-gain](https://github.com/mizcausevic-dev/mcp-kinetic-gain) package exposes all four `aeo_*` tool names from this source repo. Use the unified package below for npm-based MCP clients. This standalone remains a focused source reference while its consumers and archive path are reviewed. Its direct fetch helper has fewer network guards than the unified server, so do not use it with untrusted origins.
+> **Migration review, 2026-10-30:** The scoped standalone npm package is not published. [mcp-kinetic-gain](https://github.com/mizcausevic-dev/mcp-kinetic-gain) exposes the same four `aeo_*` tool names and is an npm install option, but v0.10.0 is not a behavior-equivalent replacement. This source enforces canonical HTTPS origins and includes optional Tool Card URI metadata. Both implementations guard remote fetches; their origin validation, outputs, and metadata still need parity review. Keep this focused source available and do not archive it on tool-name parity alone.
 
 An **MCP server** that exposes [AEO Protocol](https://github.com/mizcausevic-dev/aeo-protocol-spec) declarations as tools any MCP-compatible AI agent can call — Claude Desktop, Cursor, [Codex CLI](https://github.com/anthropics/claude-cli), or any custom client.
 
@@ -15,7 +15,17 @@ Drop the server config into your MCP client and the agent gains four tools:
 
 Each tool ships with a conforming [MCP Tool Card](https://github.com/mizcausevic-dev/mcp-tool-card-spec) document in [`tool-cards/`](tool-cards/).
 
-## Install
+## Run this standalone source
+
+```bash
+npm ci
+npm run build
+node dist/server.js
+```
+
+## Unified npm option
+
+The commands below run the unified Suite server and expose additional tools. Review its behavior and network policy before switching an existing client.
 
 ```bash
 npm install -g mcp-kinetic-gain
