@@ -1,5 +1,7 @@
 # mcp-aeo-server
 
+> **Install path checked 2026-10-30:** The scoped standalone npm package is not published. The public [mcp-kinetic-gain](https://github.com/mizcausevic-dev/mcp-kinetic-gain) package exposes all four `aeo_*` tool names from this source repo. Use the unified package below for npm-based MCP clients. This standalone remains a focused source reference while its consumers and archive path are reviewed. Its direct fetch helper has fewer network guards than the unified server, so do not use it with untrusted origins.
+
 An **MCP server** that exposes [AEO Protocol](https://github.com/mizcausevic-dev/aeo-protocol-spec) declarations as tools any MCP-compatible AI agent can call — Claude Desktop, Cursor, [Codex CLI](https://github.com/anthropics/claude-cli), or any custom client.
 
 Drop the server config into your MCP client and the agent gains four tools:
@@ -16,13 +18,13 @@ Each tool ships with a conforming [MCP Tool Card](https://github.com/mizcausevic
 ## Install
 
 ```bash
-npm install -g @mizcausevic-dev/mcp-aeo-server
+npm install -g mcp-kinetic-gain
 ```
 
 Or run without installing via `npx`:
 
 ```bash
-npx @mizcausevic-dev/mcp-aeo-server
+npx -y mcp-kinetic-gain
 ```
 
 ## Claude Desktop config
@@ -32,15 +34,15 @@ Add to your `claude_desktop_config.json` (macOS: `~/Library/Application Support/
 ```json
 {
   "mcpServers": {
-    "aeo": {
+    "kinetic-gain": {
       "command": "npx",
-      "args": ["-y", "@mizcausevic-dev/mcp-aeo-server"]
+      "args": ["-y", "mcp-kinetic-gain"]
     }
   }
 }
 ```
 
-Restart Claude Desktop. The four `aeo_*` tools will appear in Claude's tools panel and the model can invoke them directly. Try:
+Restart Claude Desktop. The four `aeo_*` tools will appear among the Suite tools in Claude's tools panel and the model can invoke them directly. Try:
 
 > *"Use the aeo_inspect tool to show me what mizcausevic-dev.github.io declares about itself."*
 
@@ -48,7 +50,7 @@ Claude will call `aeo_inspect({ origin: "https://mizcausevic-dev.github.io" })` 
 
 ## Cursor / Continue / other MCP clients
 
-Any client that speaks MCP over stdio works. Point its server config at `npx @mizcausevic-dev/mcp-aeo-server` with no arguments.
+Any client that speaks MCP over stdio works. Point its server config at `npx -y mcp-kinetic-gain` with no arguments.
 
 ## Tools
 
