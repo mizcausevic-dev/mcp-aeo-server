@@ -1,6 +1,6 @@
 # mcp-aeo-server
 
-> **Migration review, 2026-10-30:** The scoped standalone npm package is not published. [mcp-kinetic-gain](https://github.com/mizcausevic-dev/mcp-kinetic-gain) exposes the same four `aeo_*` tool names and is an npm install option, but v0.10.0 is not a behavior-equivalent replacement. This source enforces canonical HTTPS origins and includes optional Tool Card URI metadata. Both implementations guard remote fetches; their origin validation, outputs, and metadata still need parity review. Keep this focused source available and do not archive it on tool-name parity alone.
+> **Migration review, 2026-10-31:** The scoped standalone npm package is not published. [mcp-kinetic-gain](https://github.com/mizcausevic-dev/mcp-kinetic-gain) exposes the same four `aeo_*` tool names and is an npm install option, but tool-name overlap does not establish behavior parity. This standalone source appends the well-known path to a supplied origin and fetches with a 10-second timeout; it does not restrict destinations to public HTTPS addresses or bound redirects and response size. Do not pass untrusted origins to this version. [PR #33](https://github.com/mizcausevic-dev/mcp-aeo-server/pull/33) proposes those guards and a fourth bundled Tool Card, but remains unmerged. Compare network behavior, outputs, and metadata before migrating a client.
 
 An **MCP server** that exposes [AEO Protocol](https://github.com/mizcausevic-dev/aeo-protocol-spec) declarations as tools any MCP-compatible AI agent can call — Claude Desktop, Cursor, [Codex CLI](https://github.com/anthropics/claude-cli), or any custom client.
 
@@ -11,9 +11,9 @@ Drop the server config into your MCP client and the agent gains four tools:
 | `aeo_fetch` | Fetch the full `/.well-known/aeo.json` for an origin |
 | `aeo_inspect` | Return a structured summary (entity, claim count, audit mode) — cheaper for context-window-constrained agents |
 | `aeo_get_claim` | Extract a single claim by ID; surfaces available IDs when the requested one is missing |
-| `aeo_well_known_url` | Compute the canonical well-known URL without fetching |
+| `aeo_well_known_url` | Append the well-known path without fetching or validating the origin |
 
-Each tool ships with a conforming [MCP Tool Card](https://github.com/mizcausevic-dev/mcp-tool-card-spec) document in [`tool-cards/`](tool-cards/).
+Three tools have bundled [MCP Tool Card](https://github.com/mizcausevic-dev/mcp-tool-card-spec) documents in [`tool-cards/`](tool-cards/). The `aeo_well_known_url` card is proposed in [PR #33](https://github.com/mizcausevic-dev/mcp-aeo-server/pull/33); bundled files do not by themselves provide hosted discovery.
 
 ## Run this standalone source
 
@@ -106,14 +106,14 @@ Returns `{ "url": "https://example.com/.well-known/aeo.json" }`.
 
 ## How this fits the Kinetic Gain Protocol Suite
 
-- The **server itself** uses AEO Protocol semantics (Tool Cards published in [`tool-cards/`](tool-cards/), conforming to [mcp-tool-card-spec](https://github.com/mizcausevic-dev/mcp-tool-card-spec))
+- The **server repository** bundles three Tool Card documents in [`tool-cards/`](tool-cards/); it does not serve them over HTTPS
 - The **tools** read AEO Protocol documents conforming to [aeo-protocol-spec](https://github.com/mizcausevic-dev/aeo-protocol-spec)
 - Together they close a loop: an AEO declaration somewhere on the web → an MCP server that lets any AI agent reason about it
 
 ## Conformance
 
 - **AEO Protocol** support: Level 1 (Declare). Signature verification (L2) and audit submission (L3) are deferred to v0.2.
-- **MCP Tool Cards** support: Level 2 (Safety) for every tool, conforming to the v0.1 spec.
+- **MCP Tool Cards**: three tools have bundled safety disclosures; the fourth card and any hosted discovery require separate work.
 
 ## Development
 
